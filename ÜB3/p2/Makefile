@@ -1,9 +1,9 @@
 CC=     gcc
 testlib=../testlib
 CFLAGS= -g -W -Wall -Werror -std=c99 -I$(testlib) -I.
-LDFLAGS=
-TARGET= run_program
-SRC=    run_program.c testlib.c
+LDFLAGS=-pthread
+TARGET= scheduler
+SRC=    scheduler.c testlib.c
 VPATH=  $(testlib) tests
 TESTS=  $(basename $(notdir $(wildcard tests/*.c)))
 
@@ -22,9 +22,8 @@ run-tests: $(TESTS)
 run-tests-solution: $(TESTS-sol)
 	@bash $(testlib)/testrunner $(addprefix ./,$^)
 
-wrap := -Wl,--wrap=
-$(call testnames,test_exec): LDFLAGS+=$(addprefix $(wrap),fork execv execvp wait waitpid)
-$(call testnames,test_wait test_exitstatus test_error): LDFLAGS+=$(addprefix $(wrap),fork wait waitpid)
+$(call testnames,test_queue_leaks): LDFLAGS+=-fsanitize=leak
+$(call testnames,test_scheduler_leaks): LDFLAGS+=-fsanitize=leak
 
 $(TARGET): main.o $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
